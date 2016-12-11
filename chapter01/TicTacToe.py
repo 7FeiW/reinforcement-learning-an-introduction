@@ -2,6 +2,7 @@
 # Copyright (C)                                                       #
 # 2016 Shangtong Zhang(zhangshangtong.cpp@gmail.com)                  #
 # 2016 Jan Hakenberg(jan.hakenberg@gmail.com)                         #
+# 2016 Tian Jun(tianjun.cpp@gmail.com)                                #
 # Permission given to modify the code as long as you keep this        #
 # declaration at the top                                              #
 #######################################################################
@@ -138,10 +139,6 @@ class Judger:
         self.currentState = State()
         self.allStates = allStates
 
-    def reset(self):
-        self.currentState = State()
-        self.currentPlayer = None
-
     # give reward to two players
     def giveReward(self):
         if self.currentState.winner == self.p1Symbol:
@@ -163,7 +160,7 @@ class Judger:
         self.p2.reset()
         self.currentState = State()
         self.currentPlayer = None
-        
+
     # @show: if True, print each board during the game
     def play(self, show=False):
         self.reset()
@@ -199,7 +196,7 @@ class Player:
 
     def reset(self):
         self.states = []
-        
+
     def setSymbol(self, symbol):
         self.symbol = symbol
         for hash in self.allStates.keys():
@@ -229,7 +226,7 @@ class Player:
         self.states = []
 
     # determine next action
-    def takeAction(self): 
+    def takeAction(self):
         state = self.states[-1]
         nextStates = []
         nextPositions = []
@@ -240,6 +237,8 @@ class Player:
                     nextStates.append(state.nextState(i, j, self.symbol).getHash())
         if np.random.binomial(1, self.exploreRate):
             np.random.shuffle(nextPositions)
+            # Not sure if truncating is the best way to deal with exploratory step
+            # Maybe it's better to only skip this step rather than forget all the history
             self.states = []
             action = nextPositions[0]
             action.append(self.symbol)
@@ -307,8 +306,6 @@ def train(epochs=20000):
         if winner == -1:
             player2Win += 1
         judger.reset()
-        player1.reset()
-        player2.reset()
     print player1Win / epochs
     print player2Win / epochs
     player1.savePolicy()
@@ -330,8 +327,6 @@ def compete(turns=500):
         if winner == -1:
             player2Win += 1
         judger.reset()
-        player1.reset()
-        player2.reset()
     print player1Win / turns
     print player2Win / turns
 
